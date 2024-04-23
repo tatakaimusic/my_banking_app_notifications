@@ -5,8 +5,8 @@ import jakarta.mail.MessagingException;
 
 import java.io.IOException;
 
-public interface KafkaDataService {
+public interface MailService {
 
-    void handleEmail(String email) throws MessagingException, TemplateException, IOException;
+    void sendEmail(String email) throws MessagingException, IOException, TemplateException;
 
 }
