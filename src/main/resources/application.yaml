@@ -17,8 +17,15 @@ spring:
           auth: true
           starttls:
             enable: true
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      email-key-lifetime: ${REDIS_EMAIL_KEY_LIFETIME}
 
 server:
   port: 8081
 
 topics: ${KAFKA_SUBSCRIBED_TOPICS}
+
+

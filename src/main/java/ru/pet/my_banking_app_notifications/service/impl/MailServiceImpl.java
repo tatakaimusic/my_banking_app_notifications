@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import ru.pet.my_banking_app_notifications.repository.EmailRedisRepository;
 import ru.pet.my_banking_app_notifications.service.MailService;
 
 import java.io.IOException;
@@ -21,11 +22,17 @@ public class MailServiceImpl implements MailService {
 
     private final Configuration configuration;
     private final JavaMailSender javaMailSender;
+    private final EmailRedisRepository emailRedisRepository;
 
     @Autowired
-    public MailServiceImpl(Configuration configuration, JavaMailSender javaMailSender) {
+    public MailServiceImpl(
+            Configuration configuration,
+            JavaMailSender javaMailSender,
+            EmailRedisRepository emailRedisRepository
+    ) {
         this.configuration = configuration;
         this.javaMailSender = javaMailSender;
+        this.emailRedisRepository = emailRedisRepository;
     }
 
     @Override
@@ -34,16 +41,18 @@ public class MailServiceImpl implements MailService {
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
         helper.setSubject("Your confirmation code to register in my banking app");
         helper.setTo(email);
-        String emailContent = getConfirmationEmailContent();
+        String code = generateCode();
+        String emailContent = getConfirmationEmailContent(code);
         helper.setText(emailContent, true);
         javaMailSender.send(mimeMessage);
 
+        emailRedisRepository.save(email, code);
     }
 
-    private String getConfirmationEmailContent() throws IOException, TemplateException {
+    private String getConfirmationEmailContent(String code) throws IOException, TemplateException {
         StringWriter writer = new StringWriter();
         Map<String, Object> model = new HashMap<>();
-        model.put("code", generateCode());
+        model.put("code", code);
         configuration.getTemplate("email_confirmation.ftlh")
                 .process(model, writer);
         return writer.getBuffer().toString();
